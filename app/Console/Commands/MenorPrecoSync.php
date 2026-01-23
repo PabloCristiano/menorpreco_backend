@@ -20,11 +20,18 @@ class MenorPrecoSync extends Command
         set_time_limit(0);
         ini_set('memory_limit', '-1');
 
+        // ⏱️ INICIA CONTAGEM DE TEMPO
+        $tempoInicio = microtime(true);
+
         $this->info('🚀 Iniciando sincronização Menor Preço');
+        $this->info('⏰ Horário de início: ' . now()->format('d/m/Y H:i:s'));
+        $this->newLine();
 
         $service = app(MenorPrecoService::class);
 
         $totalProcessados = 0;
+        $totalChamadasAPI = 0;
+        $totalErros = 0;
 
         /**
          * 🔎 Busca GTINs distintos (independente do NCM)
@@ -43,16 +50,21 @@ class MenorPrecoSync extends Command
         }
 
         $this->info("📊 Total de GTINs distintos: {$gtinsDistintos->count()}");
+        $this->newLine();
 
-        foreach ($gtinsDistintos as $grupo) {
+        foreach ($gtinsDistintos as $index => $grupo) {
 
             $gtin      = $grupo->gtin;
             $categoria = $grupo->categoria;
             $local     = $grupo->local;
 
-            $this->line("🔎 GTIN: {$gtin} | cat={$categoria} | local={$local}");
+            $progresso = $index + 1;
+            $this->line("🔎 [{$progresso}/{$gtinsDistintos->count()}] GTIN: {$gtin} | cat={$categoria} | local={$local}");
 
             try {
+                // ⏱️ Tempo individual da chamada API
+                $tempoAPIInicio = microtime(true);
+
                 // 🎯 UMA única chamada por GTIN (retorna TODOS os produtos daquele GTIN)
                 $response = $service->consultar(
                     termo: null,
@@ -61,12 +73,16 @@ class MenorPrecoSync extends Command
                     categoria: $categoria
                 );
 
+                $tempoAPIFim = microtime(true);
+                $tempoAPI = round($tempoAPIFim - $tempoAPIInicio, 2);
+                $totalChamadasAPI++;
+
                 if (empty($response['produtos'] ?? [])) {
-                    $this->line('   ↳ Nenhum produto retornado');
+                    $this->line("   ↳ Nenhum produto retornado (tempo: {$tempoAPI}s)");
                     continue;
                 }
 
-                $this->line("   ↳ {$response['total']} produtos encontrados na API");
+                $this->line("   ↳ {$response['total']} produtos encontrados na API (tempo: {$tempoAPI}s)");
 
                 /**
                  * Busca TODOS os produtos monitorados com esse GTIN
@@ -134,6 +150,7 @@ class MenorPrecoSync extends Command
                 }
 
                 $this->line("   ↳ ✅ {$salvosLote} registros de preços salvos");
+                $this->newLine();
 
                 // respeita API
                 usleep(200_000);
@@ -141,6 +158,8 @@ class MenorPrecoSync extends Command
             } catch (\Throwable $e) {
 
                 $this->error("❌ Erro no GTIN: {$gtin}");
+                $this->error("   ↳ {$e->getMessage()}");
+                $totalErros++;
 
                 Log::error('Erro Menor Preço Sync', [
                     'gtin'      => $gtin,
@@ -148,9 +167,65 @@ class MenorPrecoSync extends Command
                     'local'     => $local,
                     'erro'      => $e->getMessage(),
                 ]);
+
+                $this->newLine();
             }
         }
 
-        $this->info("✅ Sincronização finalizada | Registros processados: {$totalProcessados}");
+        // ⏱️ FINALIZA CONTAGEM DE TEMPO
+        $tempoFim = microtime(true);
+        $tempoTotal = $tempoFim - $tempoInicio;
+
+        // Formata o tempo
+        $minutos = floor($tempoTotal / 60);
+        $segundos = round($tempoTotal % 60, 2);
+
+        // ═══════════════════════════════════════════════════════════
+        // RESUMO FINAL
+        // ═══════════════════════════════════════════════════════════
+        $this->newLine();
+        $this->info('═══════════════════════════════════════════════════════════');
+        $this->info('                    RESUMO DA SINCRONIZAÇÃO                ');
+        $this->info('═══════════════════════════════════════════════════════════');
+        $this->info("✅ Status: Finalizado");
+        $this->info("⏰ Horário de término: " . now()->format('d/m/Y H:i:s'));
+        $this->newLine();
+
+        $this->info("📊 ESTATÍSTICAS:");
+        $this->line("   • GTINs processados: {$gtinsDistintos->count()}");
+        $this->line("   • Chamadas à API: {$totalChamadasAPI}");
+        $this->line("   • Registros salvos: {$totalProcessados}");
+        $this->line("   • Erros encontrados: {$totalErros}");
+        $this->newLine();
+
+        $this->info("⏱️  TEMPO DE EXECUÇÃO:");
+        if ($minutos > 0) {
+            $this->line("   • Tempo total: {$minutos}min {$segundos}s");
+        } else {
+            $this->line("   • Tempo total: {$segundos}s");
+        }
+
+        if ($totalChamadasAPI > 0) {
+            $tempoMedioPorChamada = round($tempoTotal / $totalChamadasAPI, 2);
+            $this->line("   • Tempo médio por GTIN: {$tempoMedioPorChamada}s");
+        }
+
+        if ($totalProcessados > 0) {
+            $registrosPorMinuto = round(($totalProcessados / $tempoTotal) * 60, 2);
+            $this->line("   • Taxa: {$registrosPorMinuto} registros/minuto");
+        }
+
+        $this->info('═══════════════════════════════════════════════════════════');
+        $this->newLine();
+
+        // Log final
+        Log::info('Menor Preço Sync Finalizado', [
+            'total_gtins'        => $gtinsDistintos->count(),
+            'total_chamadas_api' => $totalChamadasAPI,
+            'total_processados'  => $totalProcessados,
+            'total_erros'        => $totalErros,
+            'tempo_total_seg'    => round($tempoTotal, 2),
+            'tempo_formatado'    => $minutos > 0 ? "{$minutos}min {$segundos}s" : "{$segundos}s",
+        ]);
     }
 }
