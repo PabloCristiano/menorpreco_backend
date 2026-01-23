@@ -86,30 +86,66 @@ class MenorPrecoController extends Controller
      */
     public function consultar(MenorPrecoService $service, Request $request): JsonResponse
     {
-            $termo = $request->query('termo', '');
-            $local = $request->query('local', config('menorpreco.local_cascavel'));
-            $categoria = $request->query('categoria', '');
-            $response = $service->consultar($termo, $local, $categoria);
+        $termo     = $request->query('termo', '');
+        $gtin      = $request->query('gtin', '');
+        $local     = $request->query('local', config('menorpreco.local_cascavel'));
+        $categoria = $request->query('categoria', '');
 
-            return response()->json([
-                'status' => 'ok',
-                'data'   => $response
-            ]);
-        }
+        $response = $service->consultar(
+            termo: $termo,
+            gtin: $gtin,
+            local: $local,
+            categoria: $categoria
+        );
 
-        /**
-         *  Consulta API e salva no banco
-         */
+        return response()->json([
+            'status' => 'ok',
+            'data'   => $response
+        ]);
+    }
+
+    /**
+     *  Consulta API e salva no banco (VERSÃO ATUALIZADA)
+     */
     public function consultarESalvar(
         MenorPrecoService $service,
         Request $request
     ): JsonResponse {
 
         $termo     = $request->query('termo');
+        $gtin      = $request->query('gtin');
         $local     = $request->query('local');
         $categoria = $request->query('categoria', 20);
+        $offset    = $request->query('offset', 0);
+        $raio      = $request->query('raio', 200);
+        $data      = $request->query('data', -1);
+        $ordem     = $request->query('ordem', 0);
 
-        $response = $service->consultar($termo, $local, $categoria);
+        // Validação
+        if (empty($termo) && empty($gtin)) {
+            return response()->json([
+                'status' => 'erro',
+                'msg'    => 'Informe termo ou gtin para busca'
+            ], 400);
+        }
+
+        if (empty($local)) {
+            return response()->json([
+                'status' => 'erro',
+                'msg'    => 'Parâmetro local é obrigatório'
+            ], 400);
+        }
+
+        $response = $service->consultar(
+            termo: $termo,
+            gtin: $gtin,
+            local: $local,
+            categoria: $categoria,
+            offset: $offset,
+            raio: $raio,
+            data: $data,
+            ordem: $ordem
+        );
 
         if (
             empty($response) ||
@@ -122,16 +158,20 @@ class MenorPrecoController extends Controller
         }
 
         $salvos = 0;
+        $detalhes = [];
 
         foreach ($response['produtos'] as $p) {
 
             /** ---------------- PRODUTO ---------------- */
+            // Usa GTIN + NCM como chave única
             $produto = MenorprecoProduto::firstOrCreate(
-                ['gtin' => $p['gtin'] ?? null],
                 [
-                    'palavrachave' => $termo,
+                    'gtin' => $p['gtin'] ?? null,
+                    'ncm'  => $p['ncm'] ?? null,
+                ],
+                [
+                    'palavrachave' => $termo ?? ($p['desc'] ?? null),
                     'descricao'    => $p['desc'] ?? null,
-                    'ncm'          => $p['ncm'] ?? null,
                     'volume'       => 0,
                     'unidade'      => 'UN',
                     'categoria'    => $categoria,
@@ -140,6 +180,10 @@ class MenorPrecoController extends Controller
             );
 
             /** ------------- ESTABELECIMENTO ------------ */
+            if (empty($p['estabelecimento'])) {
+                continue;
+            }
+
             $est = $p['estabelecimento'];
 
             $estabelecimento = MenorprecoEstabelecimento::firstOrCreate(
@@ -173,18 +217,24 @@ class MenorPrecoController extends Controller
             );
 
             $salvos++;
+
+            $detalhes[] = [
+                'produto_id' => $produto->id,
+                'gtin'       => $p['gtin'],
+                'ncm'        => $p['ncm'],
+                'desc'       => $p['desc'],
+                'preco'      => $p['valor'],
+                'estabelecimento' => $est['nm_fan'] ?? $est['nm_emp'],
+            ];
         }
 
         return response()->json([
-            'status' => 'ok',
-            'salvos' => $salvos,
-            'total'  => count($response['produtos']),
-            'data'   => now()->toDateString()
+            'status'   => 'ok',
+            'salvos'   => $salvos,
+            'total'    => count($response['produtos']),
+            'data'     => now()->toDateString(),
+            'filtro'   => $gtin ? "gtin: {$gtin}" : "termo: {$termo}",
+            'detalhes' => $detalhes,
         ]);
     }
-
 }
-// SELECT data_coleta, preco
-// FROM menorpreco_historico_precos
-// WHERE produto_id = 717
-// ORDER BY data_coleta;

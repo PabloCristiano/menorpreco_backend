@@ -9,22 +9,38 @@ use Illuminate\Support\Facades\Http;
 class MenorPrecoService
 {
     /**
-     * Consulta API Menor Preço
+     * Consulta API Menor Preço (VERSÃO ATUALIZADA)
      */
-    public function consultar(string $termo, string $local, int $categoria): array
-    {
+    public function consultar(
+        ?string $termo = null,
+        ?string $gtin = null,
+        string $local = '',
+        int $categoria = 20,
+        int $offset = 0,
+        int $raio = 200,
+        int $data = -1,
+        int $ordem = 0
+    ): array {
         try {
+            $params = [
+                'local'     => $local,
+                'categoria' => $categoria,
+                'offset'    => $offset,
+                'raio'      => $raio,
+                'data'      => $data,
+                'ordem'     => $ordem,
+            ];
+
+            // Adiciona termo OU gtin (prioriza gtin)
+            if (!empty($gtin)) {
+                $params['gtin'] = $gtin;
+            } elseif (!empty($termo)) {
+                $params['termo'] = $termo;
+            }
+
             return Http::get(
                 'https://menorpreco.notaparana.pr.gov.br/api/v1/produtos',
-                [
-                    'local'     => $local,
-                    'termo'     => $termo,
-                    'categoria' => $categoria,
-                    'offset'    => 0,
-                    'raio'      => 200,
-                    'data'      => -1,
-                    'ordem'     => 0,
-                ]
+                $params
             )->json();
 
         } catch (\Throwable $e) {
@@ -42,11 +58,14 @@ class MenorPrecoService
      */
     public function ehProdutoAlvo(array $p, Produto $produto): bool
     {
-        /** 1️⃣ Match direto por GTIN */
+        /** 1️⃣ Match direto por GTIN + NCM */
         if (
             !empty($produto->gtin) &&
             !empty($p['gtin']) &&
-            $p['gtin'] === $produto->gtin
+            $p['gtin'] === $produto->gtin &&
+            !empty($produto->ncm) &&
+            !empty($p['ncm']) &&
+            $p['ncm'] === $produto->ncm
         ) {
             return true;
         }
