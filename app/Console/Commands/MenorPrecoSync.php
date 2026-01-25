@@ -34,155 +34,304 @@ class MenorPrecoSync extends Command
         $totalErros = 0;
 
         /**
-         * 🔎 Busca GTINs distintos (independente do NCM)
-         * Para cada GTIN faz UMA chamada na API que retorna TODOS os produtos daquele GTIN
+         * 🔎 ESTRATÉGIA INTELIGENTE:
+         * 
+         * 1. Produtos COM GTIN: agrupa por (gtin, ncm, categoria, local)
+         * 2. Produtos SEM GTIN: agrupa por (palavrachave, ncm, categoria, local)
+         * 
+         * Isso garante que TODOS os produtos sejam consultados, mesmo os sem GTIN
          */
-        $gtinsDistintos = Produto::whereNotNull('gtin')
+
+        // ═════════════════════════════════════════════════════════
+        // GRUPO 1: Produtos COM GTIN
+        // ═════════════════════════════════════════════════════════
+        $produtosComGTIN = Produto::whereNotNull('gtin')
             ->where('gtin', '<>', '')
-            ->select('gtin', 'categoria', 'local')
+            ->select('gtin', 'ncm', 'categoria', 'local')
             ->distinct()
             ->orderBy('gtin')
+            ->orderBy('ncm')
             ->get();
 
-        if ($gtinsDistintos->isEmpty()) {
-            $this->warn('⚠️  Nenhum produto com GTIN cadastrado');
+        // ═════════════════════════════════════════════════════════
+        // GRUPO 2: Produtos SEM GTIN (busca por palavra-chave)
+        // ═════════════════════════════════════════════════════════
+        $produtosSemGTIN = Produto::where(function($q) {
+                $q->whereNull('gtin')
+                  ->orWhere('gtin', '');
+            })
+            ->whereNotNull('palavrachave')
+            ->where('palavrachave', '<>', '')
+            ->select('palavrachave', 'ncm', 'categoria', 'local')
+            ->distinct()
+            ->orderBy('palavrachave')
+            ->orderBy('ncm')
+            ->get();
+
+        $totalGrupos = $produtosComGTIN->count() + $produtosSemGTIN->count();
+
+        if ($totalGrupos === 0) {
+            $this->warn('⚠️  Nenhum produto cadastrado para sincronizar');
             return;
         }
 
-        $this->info("📊 Total de GTINs distintos: {$gtinsDistintos->count()}");
+        $this->info("📊 GRUPOS IDENTIFICADOS:");
+        $this->line("   • Com GTIN: {$produtosComGTIN->count()}");
+        $this->line("   • Sem GTIN (palavra-chave): {$produtosSemGTIN->count()}");
+        $this->line("   • TOTAL: {$totalGrupos}");
         $this->newLine();
 
-        foreach ($gtinsDistintos as $index => $grupo) {
+        $progresso = 0;
 
-            $gtin      = $grupo->gtin;
-            $categoria = $grupo->categoria;
-            $local     = $grupo->local;
+        // ═════════════════════════════════════════════════════════
+        // PROCESSA GRUPO 1: Produtos COM GTIN
+        // ═════════════════════════════════════════════════════════
+        if ($produtosComGTIN->isNotEmpty()) {
+            $this->info('🏷️  PROCESSANDO PRODUTOS COM GTIN');
+            $this->newLine();
 
-            $progresso = $index + 1;
-            $this->line("🔎 [{$progresso}/{$gtinsDistintos->count()}] GTIN: {$gtin} | cat={$categoria} | local={$local}");
+            foreach ($produtosComGTIN as $grupo) {
+                $progresso++;
 
-            try {
-                // ⏱️ Tempo individual da chamada API
-                $tempoAPIInicio = microtime(true);
+                $gtin      = $grupo->gtin;
+                $ncm       = $grupo->ncm;
+                $categoria = $grupo->categoria;
+                $local     = $grupo->local;
 
-                // 🎯 UMA única chamada por GTIN (retorna TODOS os produtos daquele GTIN)
-                $response = $service->consultar(
-                    termo: null,
-                    gtin: $gtin,
-                    local: $local,
-                    categoria: $categoria
-                );
+                $this->line("🔎 [{$progresso}/{$totalGrupos}] GTIN: {$gtin} | NCM: {$ncm} | cat={$categoria}");
 
-                $tempoAPIFim = microtime(true);
-                $tempoAPI = round($tempoAPIFim - $tempoAPIInicio, 2);
-                $totalChamadasAPI++;
+                try {
+                    $tempoAPIInicio = microtime(true);
 
-                if (empty($response['produtos'] ?? [])) {
-                    $this->line("   ↳ Nenhum produto retornado (tempo: {$tempoAPI}s)");
-                    continue;
-                }
+                    // 🎯 Busca por GTIN
+                    $response = $service->consultar(
+                        termo: null,
+                        gtin: $gtin,
+                        local: $local,
+                        categoria: $categoria
+                    );
 
-                $this->line("   ↳ {$response['total']} produtos encontrados na API (tempo: {$tempoAPI}s)");
+                    $tempoAPIFim = microtime(true);
+                    $tempoAPI = round($tempoAPIFim - $tempoAPIInicio, 2);
+                    $totalChamadasAPI++;
 
-                /**
-                 * Busca TODOS os produtos monitorados com esse GTIN
-                 * (podem ter NCMs diferentes)
-                 */
-                $produtosAlvo = Produto::where('gtin', $gtin)
-                    ->where('categoria', $categoria)
-                    ->where('local', $local)
-                    ->get();
-
-                $this->line("   ↳ {$produtosAlvo->count()} produtos cadastrados para monitorar");
-
-                $salvosLote = 0;
-
-                foreach ($response['produtos'] as $p) {
-
-                    if (empty($p['estabelecimento'])) {
+                    if (empty($response['produtos'] ?? [])) {
+                        $this->line("   ↳ Nenhum produto retornado (tempo: {$tempoAPI}s)");
                         continue;
                     }
 
-                    // Para cada produto da API, verifica se bate com algum produto monitorado
-                    foreach ($produtosAlvo as $produto) {
+                    $this->line("   ↳ {$response['total']} produtos encontrados (tempo: {$tempoAPI}s)");
 
-                        /** 🎯 Match inteligente por GTIN + NCM */
-                        if (!$service->ehProdutoAlvo($p, $produto)) {
-                            continue;
-                        }
+                    // Busca produtos monitorados com esse GTIN + NCM
+                    $produtosAlvo = Produto::where('gtin', $gtin)
+                        ->where('ncm', $ncm)
+                        ->where('categoria', $categoria)
+                        ->where('local', $local)
+                        ->get();
 
-                        /** ------------ ESTABELECIMENTO ------------ */
-                        $est = $p['estabelecimento'];
+                    $this->line("   ↳ {$produtosAlvo->count()} produto(s) cadastrado(s)");
 
-                        $estabelecimento = Estabelecimento::updateOrCreate(
-                            ['codigo' => $est['codigo']],
-                            [
-                                'nome_fantasia' => $est['nm_fan'] ?? null,
-                                'razao_social'  => $est['nm_emp'] ?? null,
-                                'bairro'        => $est['bairro'] ?? null,
-                                'cidade'        => $est['mun'] ?? null,
-                                'uf'            => $est['uf'] ?? null,
-                                'tp_logr'       => $est['tp_logr'] ?? null,
-                                'nm_logr'       => $est['nm_logr'] ?? null,
-                                'nr_logr'       => $est['nr_logr'] ?? null,
-                            ]
-                        );
+                    $salvosLote = $this->salvarPrecos($response, $produtosAlvo, $service);
+                    
+                    $totalProcessados += $salvosLote;
+                    $this->line("   ↳ ✅ {$salvosLote} registro(s) salvos");
+                    $this->newLine();
 
-                        /** ---------------- HISTÓRICO ---------------- */
-                        HistoricoPreco::updateOrCreate(
-                            [
-                                'produto_id'         => $produto->id,
-                                'estabelecimento_id' => $estabelecimento->id,
-                                'data_coleta'        => now()->toDateString(),
-                            ],
-                            [
-                                'preco'         => $p['valor'] ?? null,
-                                'preco_tabela'  => $p['valor_tabela'] ?? null,
-                                'desconto'      => $p['valor_desconto'] ?? null,
-                                'distancia_km'  => $p['distkm'] ?? null,
-                                'datahora_nota' => $p['datahora'] ?? null,
-                            ]
-                        );
+                    usleep(200_000); // Respeita API
 
-                        $salvosLote++;
-                        $totalProcessados++;
-                    }
+                } catch (\Throwable $e) {
+                    $this->tratarErro($e, "GTIN: {$gtin} | NCM: {$ncm}", $gtin, $ncm, $categoria, $local);
+                    $totalErros++;
                 }
-
-                $this->line("   ↳ ✅ {$salvosLote} registros de preços salvos");
-                $this->newLine();
-
-                // respeita API
-                usleep(200_000);
-
-            } catch (\Throwable $e) {
-
-                $this->error("❌ Erro no GTIN: {$gtin}");
-                $this->error("   ↳ {$e->getMessage()}");
-                $totalErros++;
-
-                Log::error('Erro Menor Preço Sync', [
-                    'gtin'      => $gtin,
-                    'categoria' => $categoria,
-                    'local'     => $local,
-                    'erro'      => $e->getMessage(),
-                ]);
-
-                $this->newLine();
             }
         }
 
-        // ⏱️ FINALIZA CONTAGEM DE TEMPO
+        // ═════════════════════════════════════════════════════════
+        // PROCESSA GRUPO 2: Produtos SEM GTIN (por palavra-chave)
+        // ═════════════════════════════════════════════════════════
+        if ($produtosSemGTIN->isNotEmpty()) {
+            $this->info('🔤 PROCESSANDO PRODUTOS SEM GTIN (BUSCA POR PALAVRA-CHAVE)');
+            $this->newLine();
+
+            foreach ($produtosSemGTIN as $grupo) {
+                $progresso++;
+
+                $palavrachave = $grupo->palavrachave;
+                $ncm          = $grupo->ncm;
+                $categoria    = $grupo->categoria;
+                $local        = $grupo->local;
+
+                $this->line("🔎 [{$progresso}/{$totalGrupos}] TERMO: '{$palavrachave}' | NCM: {$ncm} | cat={$categoria}");
+
+                try {
+                    $tempoAPIInicio = microtime(true);
+
+                    // 🎯 Busca por TERMO (palavra-chave)
+                    $response = $service->consultar(
+                        termo: $palavrachave,
+                        gtin: null,
+                        local: $local,
+                        categoria: $categoria
+                    );
+
+                    $tempoAPIFim = microtime(true);
+                    $tempoAPI = round($tempoAPIFim - $tempoAPIInicio, 2);
+                    $totalChamadasAPI++;
+
+                    if (empty($response['produtos'] ?? [])) {
+                        $this->line("   ↳ Nenhum produto retornado (tempo: {$tempoAPI}s)");
+                        continue;
+                    }
+
+                    $this->line("   ↳ {$response['total']} produtos encontrados (tempo: {$tempoAPI}s)");
+
+                    // Busca produtos monitorados com essa palavra-chave + NCM
+                    $produtosAlvo = Produto::where(function($q) {
+                            $q->whereNull('gtin')
+                              ->orWhere('gtin', '');
+                        })
+                        ->where('palavrachave', $palavrachave)
+                        ->where('ncm', $ncm)
+                        ->where('categoria', $categoria)
+                        ->where('local', $local)
+                        ->get();
+
+                    $this->line("   ↳ {$produtosAlvo->count()} produto(s) cadastrado(s)");
+
+                    $salvosLote = $this->salvarPrecos($response, $produtosAlvo, $service);
+                    
+                    $totalProcessados += $salvosLote;
+                    $this->line("   ↳ ✅ {$salvosLote} registro(s) salvos");
+                    $this->newLine();
+
+                    usleep(200_000); // Respeita API
+
+                } catch (\Throwable $e) {
+                    $this->tratarErro($e, "TERMO: '{$palavrachave}' | NCM: {$ncm}", null, $ncm, $categoria, $local, $palavrachave);
+                    $totalErros++;
+                }
+            }
+        }
+
+        // ═════════════════════════════════════════════════════════
+        // RESUMO FINAL
+        // ═════════════════════════════════════════════════════════
+        $this->exibirResumo(
+            $tempoInicio,
+            $totalGrupos,
+            $totalChamadasAPI,
+            $totalProcessados,
+            $totalErros,
+            $produtosComGTIN->count(),
+            $produtosSemGTIN->count()
+        );
+    }
+
+    /**
+     * Salva os preços no banco de dados
+     */
+    private function salvarPrecos(array $response, $produtosAlvo, MenorPrecoService $service): int
+    {
+        $salvosLote = 0;
+
+        foreach ($response['produtos'] as $p) {
+
+            if (empty($p['estabelecimento'])) {
+                continue;
+            }
+
+            foreach ($produtosAlvo as $produto) {
+
+                /** 🎯 Match inteligente */
+                if (!$service->ehProdutoAlvo($p, $produto)) {
+                    continue;
+                }
+
+                /** ------------ ESTABELECIMENTO ------------ */
+                $est = $p['estabelecimento'];
+
+                $estabelecimento = Estabelecimento::updateOrCreate(
+                    ['codigo' => $est['codigo']],
+                    [
+                        'nome_fantasia' => $est['nm_fan'] ?? null,
+                        'razao_social'  => $est['nm_emp'] ?? null,
+                        'bairro'        => $est['bairro'] ?? null,
+                        'cidade'        => $est['mun'] ?? null,
+                        'uf'            => $est['uf'] ?? null,
+                        'tp_logr'       => $est['tp_logr'] ?? null,
+                        'nm_logr'       => $est['nm_logr'] ?? null,
+                        'nr_logr'       => $est['nr_logr'] ?? null,
+                    ]
+                );
+
+                /** ---------------- HISTÓRICO ---------------- */
+                HistoricoPreco::updateOrCreate(
+                    [
+                        'produto_id'         => $produto->id,
+                        'estabelecimento_id' => $estabelecimento->id,
+                        'data_coleta'        => now()->toDateString(),
+                    ],
+                    [
+                        'preco'         => $p['valor'] ?? null,
+                        'preco_tabela'  => $p['valor_tabela'] ?? null,
+                        'desconto'      => $p['valor_desconto'] ?? null,
+                        'distancia_km'  => $p['distkm'] ?? null,
+                        'datahora_nota' => $p['datahora'] ?? null,
+                    ]
+                );
+
+                $salvosLote++;
+            }
+        }
+
+        return $salvosLote;
+    }
+
+    /**
+     * Trata erros durante o processamento
+     */
+    private function tratarErro(
+        \Throwable $e,
+        string $descricao,
+        ?string $gtin = null,
+        ?string $ncm = null,
+        ?int $categoria = null,
+        ?string $local = null,
+        ?string $palavrachave = null
+    ): void {
+        $this->error("❌ Erro em: {$descricao}");
+        $this->error("   ↳ {$e->getMessage()}");
+
+        Log::error('Erro Menor Preço Sync', [
+            'gtin'         => $gtin,
+            'ncm'          => $ncm,
+            'categoria'    => $categoria,
+            'local'        => $local,
+            'palavrachave' => $palavrachave,
+            'erro'         => $e->getMessage(),
+        ]);
+
+        $this->newLine();
+    }
+
+    /**
+     * Exibe resumo final da sincronização
+     */
+    private function exibirResumo(
+        float $tempoInicio,
+        int $totalGrupos,
+        int $totalChamadasAPI,
+        int $totalProcessados,
+        int $totalErros,
+        int $qtdComGTIN,
+        int $qtdSemGTIN
+    ): void {
         $tempoFim = microtime(true);
         $tempoTotal = $tempoFim - $tempoInicio;
 
-        // Formata o tempo
         $minutos = floor($tempoTotal / 60);
         $segundos = round($tempoTotal % 60, 2);
 
-        // ═══════════════════════════════════════════════════════════
-        // RESUMO FINAL
-        // ═══════════════════════════════════════════════════════════
         $this->newLine();
         $this->info('═══════════════════════════════════════════════════════════');
         $this->info('                    RESUMO DA SINCRONIZAÇÃO                ');
@@ -192,7 +341,9 @@ class MenorPrecoSync extends Command
         $this->newLine();
 
         $this->info("📊 ESTATÍSTICAS:");
-        $this->line("   • GTINs processados: {$gtinsDistintos->count()}");
+        $this->line("   • Grupos processados: {$totalGrupos}");
+        $this->line("     └─ Com GTIN: {$qtdComGTIN}");
+        $this->line("     └─ Sem GTIN (palavra-chave): {$qtdSemGTIN}");
         $this->line("   • Chamadas à API: {$totalChamadasAPI}");
         $this->line("   • Registros salvos: {$totalProcessados}");
         $this->line("   • Erros encontrados: {$totalErros}");
@@ -207,7 +358,7 @@ class MenorPrecoSync extends Command
 
         if ($totalChamadasAPI > 0) {
             $tempoMedioPorChamada = round($tempoTotal / $totalChamadasAPI, 2);
-            $this->line("   • Tempo médio por GTIN: {$tempoMedioPorChamada}s");
+            $this->line("   • Tempo médio por chamada: {$tempoMedioPorChamada}s");
         }
 
         if ($totalProcessados > 0) {
@@ -218,9 +369,10 @@ class MenorPrecoSync extends Command
         $this->info('═══════════════════════════════════════════════════════════');
         $this->newLine();
 
-        // Log final
         Log::info('Menor Preço Sync Finalizado', [
-            'total_gtins'        => $gtinsDistintos->count(),
+            'total_grupos'       => $totalGrupos,
+            'grupos_com_gtin'    => $qtdComGTIN,
+            'grupos_sem_gtin'    => $qtdSemGTIN,
             'total_chamadas_api' => $totalChamadasAPI,
             'total_processados'  => $totalProcessados,
             'total_erros'        => $totalErros,

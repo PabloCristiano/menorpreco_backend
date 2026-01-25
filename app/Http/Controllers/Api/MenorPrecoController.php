@@ -105,7 +105,7 @@ class MenorPrecoController extends Controller
     }
 
     /**
-     *  Consulta API e salva no banco (VERSÃO ATUALIZADA)
+     *  Consulta API e salva no banco (VERSÃO CORRIGIDA)
      */
     public function consultarESalvar(
         MenorPrecoService $service,
@@ -163,20 +163,35 @@ class MenorPrecoController extends Controller
         foreach ($response['produtos'] as $p) {
 
             /** ---------------- PRODUTO ---------------- */
-            // Usa GTIN + NCM como chave única
+            // 🎯 Chave única melhorada para evitar duplicatas
+            // Se tem GTIN: usa (gtin + ncm)
+            // Se não tem GTIN: usa (ncm + descricao normalizada)
+            
+            $chaveProduto = [
+                'ncm' => $p['ncm'] ?? null,
+            ];
+
+            $dadosProduto = [
+                'palavrachave' => $termo ?? ($p['desc'] ?? null),
+                'descricao'    => $p['desc'] ?? null,
+                'volume'       => 0,
+                'unidade'      => 'UN',
+                'categoria'    => $categoria,
+                'local'        => $local,
+            ];
+
+            // Se tem GTIN válido, usa como chave
+            if (!empty($p['gtin'])) {
+                $chaveProduto['gtin'] = $p['gtin'];
+                $dadosProduto['gtin'] = $p['gtin'];
+            } else {
+                // Se não tem GTIN, usa descrição como parte da chave
+                $chaveProduto['descricao'] = $p['desc'] ?? null;
+            }
+
             $produto = MenorprecoProduto::firstOrCreate(
-                [
-                    'gtin' => $p['gtin'] ?? null,
-                    'ncm'  => $p['ncm'] ?? null,
-                ],
-                [
-                    'palavrachave' => $termo ?? ($p['desc'] ?? null),
-                    'descricao'    => $p['desc'] ?? null,
-                    'volume'       => 0,
-                    'unidade'      => 'UN',
-                    'categoria'    => $categoria,
-                    'local'        => $local,
-                ]
+                $chaveProduto,
+                $dadosProduto
             );
 
             /** ------------- ESTABELECIMENTO ------------ */
@@ -220,7 +235,7 @@ class MenorPrecoController extends Controller
 
             $detalhes[] = [
                 'produto_id' => $produto->id,
-                'gtin'       => $p['gtin'],
+                'gtin'       => $p['gtin'] ?? 'sem GTIN',
                 'ncm'        => $p['ncm'],
                 'desc'       => $p['desc'],
                 'preco'      => $p['valor'],

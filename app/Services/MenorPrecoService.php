@@ -9,7 +9,17 @@ use Illuminate\Support\Facades\Http;
 class MenorPrecoService
 {
     /**
-     * Consulta API Menor Preço (VERSÃO ATUALIZADA)
+     * Consulta API Menor Preço
+     * 
+     * @param string|null $termo Termo de busca (ex: "leite")
+     * @param string|null $gtin Código GTIN do produto
+     * @param string $local Código da localização (ex: "4104808" para Cascavel)
+     * @param int $categoria Código da categoria
+     * @param int $offset Paginação - offset inicial
+     * @param int $raio Raio de busca em km
+     * @param int $data Filtro de data (-1 para todas)
+     * @param int $ordem Ordenação (0=relevância, 1=preço crescente)
+     * @return array Resposta da API
      */
     public function consultar(
         ?string $termo = null,
@@ -53,12 +63,19 @@ class MenorPrecoService
     }
 
     /**
-     * Decide se o produto da API corresponde
-     * ao produto monitorado
+     * Decide se o produto da API corresponde ao produto monitorado
+     * 
+     * Estratégia de matching:
+     * 1. Se ambos têm GTIN e NCM: match direto (mais confiável)
+     * 2. Caso contrário: validação por NCM + palavra-chave + volume/unidade
+     * 
+     * @param array $p Produto retornado da API
+     * @param Produto $produto Produto cadastrado no banco
+     * @return bool True se o produto da API corresponde ao produto monitorado
      */
     public function ehProdutoAlvo(array $p, Produto $produto): bool
     {
-        /** 1️⃣ Match direto por GTIN + NCM */
+        /** 1️⃣ Match direto por GTIN + NCM (mais confiável) */
         if (
             !empty($produto->gtin) &&
             !empty($p['gtin']) &&
@@ -70,7 +87,7 @@ class MenorPrecoService
             return true;
         }
 
-        /** Proteções básicas */
+        /** 2️⃣ Proteções básicas - dados essenciais */
         if (
             empty($p['desc']) ||
             empty($p['ncm']) ||
@@ -80,29 +97,35 @@ class MenorPrecoService
             return false;
         }
 
-        /** 2️⃣ Normalização */
-        $descApi   = NormalizacaoHelper::texto($p['desc']);
-        $palavra   = NormalizacaoHelper::texto($produto->palavrachave);
+        /** 3️⃣ Normalização de textos para comparação */
+        $descApi = NormalizacaoHelper::texto($p['desc']);
+        $palavra = NormalizacaoHelper::texto($produto->palavrachave);
 
-        /** 3️⃣ Volume / unidade */
+        /** 4️⃣ Extrai volume e unidade da descrição da API */
         $volumeApi = NormalizacaoHelper::volume($descApi);
 
         $volApi = $volumeApi['volume'];
         $unApi  = $volumeApi['unidade'];
 
-        /** 4️⃣ Comparações */
+        /** 5️⃣ Validações individuais */
+        
+        // NCM deve ser idêntico
         $ncmConfere = $p['ncm'] === $produto->ncm;
 
+        // Volume: se cadastrado, deve bater com o extraído da API
         $volumeConfere = empty($produto->volume) || (
             !is_null($volApi) && (int)$volApi === (int)$produto->volume
         );
 
+        // Unidade: se cadastrada, deve bater com a extraída da API
         $unidadeConfere = empty($produto->unidade) || (
             !is_null($unApi) && $unApi === $produto->unidade
         );
 
+        // Palavra-chave deve estar presente na descrição
         $palavraConfere = str_contains($descApi, $palavra);
 
+        /** 6️⃣ Match final: todas as condições devem ser verdadeiras */
         return $ncmConfere
             && $volumeConfere
             && $unidadeConfere
