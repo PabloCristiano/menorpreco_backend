@@ -11,7 +11,7 @@ use App\Models\MenorprecoEstabelecimento as Estabelecimento;
 
 class MenorPrecoSync extends Command
 {
-    protected $signature = 'app:menor-preco-sync';
+    protected $signature = 'app:menor-preco-sync {--execucao= : ID de uma execução já criada para vincular} {--gatilho=manual : manual|agendado}';
 
     protected $description = 'Sincroniza preços do Menor Preço usando categoria e local do cadastro';
 
@@ -28,6 +28,9 @@ class MenorPrecoSync extends Command
         $this->newLine();
 
         $service = app(MenorPrecoService::class);
+
+        // Registro da execução (criado aqui ou recebido via --execucao)
+        $execucao = $this->iniciarExecucao();
 
         $totalProcessados = 0;
         $totalChamadasAPI = 0;
@@ -72,6 +75,7 @@ class MenorPrecoSync extends Command
 
         if ($totalGrupos === 0) {
             $this->warn('⚠️  Nenhum produto cadastrado para sincronizar');
+            $this->finalizarExecucao($execucao, \App\Models\ColetaExecucao::STATUS_SUCESSO, $tempoInicio, 0, 0, 0, 0);
             return;
         }
 
@@ -225,6 +229,63 @@ class MenorPrecoSync extends Command
             $produtosComGTIN->count(),
             $produtosSemGTIN->count()
         );
+
+        $this->finalizarExecucao(
+            $execucao,
+            \App\Models\ColetaExecucao::STATUS_SUCESSO,
+            $tempoInicio,
+            $totalGrupos,
+            $totalChamadasAPI,
+            $totalProcessados,
+            $totalErros
+        );
+    }
+
+    /**
+     * Cria (ou carrega via --execucao) o registro desta rodada de coleta.
+     */
+    private function iniciarExecucao(): \App\Models\ColetaExecucao
+    {
+        $id = $this->option('execucao');
+
+        if ($id && $exec = \App\Models\ColetaExecucao::find($id)) {
+            $exec->update([
+                'status'      => \App\Models\ColetaExecucao::STATUS_RODANDO,
+                'iniciado_em' => now(),
+            ]);
+            return $exec;
+        }
+
+        return \App\Models\ColetaExecucao::create([
+            'gatilho'     => $this->option('gatilho') ?: 'manual',
+            'status'      => \App\Models\ColetaExecucao::STATUS_RODANDO,
+            'iniciado_em' => now(),
+        ]);
+    }
+
+    /**
+     * Finaliza o registro da rodada com os totais.
+     */
+    private function finalizarExecucao(
+        \App\Models\ColetaExecucao $execucao,
+        string $status,
+        float $tempoInicio,
+        int $totalGrupos,
+        int $totalChamadasAPI,
+        int $totalProcessados,
+        int $totalErros,
+        ?string $mensagemErro = null
+    ): void {
+        $execucao->update([
+            'status'             => $status,
+            'finalizado_em'      => now(),
+            'duracao_seg'        => round(microtime(true) - $tempoInicio, 2),
+            'total_grupos'       => $totalGrupos,
+            'total_chamadas_api' => $totalChamadasAPI,
+            'total_processados'  => $totalProcessados,
+            'total_erros'        => $totalErros,
+            'mensagem_erro'      => $mensagemErro,
+        ]);
     }
 
     /**

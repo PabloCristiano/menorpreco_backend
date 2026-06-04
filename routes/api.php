@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MenorPrecoController;
 use App\Http\Controllers\Api\MinhaListaController;
+use App\Http\Controllers\Api\ColetaController;
+use App\Http\Controllers\Api\AnaliseController;
 
 // Rotas públicas (sem autenticação)
 Route::post('/register', [AuthController::class, 'register']);
@@ -40,4 +42,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/comparacao',  [MinhaListaController::class, 'comparacao']);
         Route::post('/atualizar',  [MinhaListaController::class, 'atualizar']);
     });
+
+    # Coleta global (sincronização híbrida: agendada + botão manual)
+    Route::post('/coleta/sincronizar', [ColetaController::class, 'sincronizar']);
+    Route::get('/coleta/ultima',       [ColetaController::class, 'ultima']);
+
+    # Análise (tendências, variações, rankings)
+    Route::get('/analise/resumo',         [AnaliseController::class, 'resumo']);
+    Route::get('/analise/produto/{id}',   [AnaliseController::class, 'produto']);
 });

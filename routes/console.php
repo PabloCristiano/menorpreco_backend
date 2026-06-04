@@ -19,7 +19,7 @@ Artisan::command('inspire', function () {
 | No VPS, basta 1 linha no crontab:
 |   * * * * * cd /caminho/do/projeto && php artisan schedule:run >> /dev/null 2>&1
 */
-Schedule::command('app:menor-preco-sync')
+Schedule::command('app:menor-preco-sync', ['--gatilho=agendado'])
     ->dailyAt('06:00')
     ->withoutOverlapping(60)
     ->runInBackground()
