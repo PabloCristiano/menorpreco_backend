@@ -15,6 +15,59 @@ use Illuminate\Http\JsonResponse;
 class MenorPrecoController extends Controller
 {
     /**
+     * Lista os produtos monitorados com o menor preço atual de cada um.
+     * Usado pelo dashboard do frontend.
+     */
+    public function produtos(Request $request): JsonResponse
+    {
+        $busca = $request->query('q');
+
+        $produtos = MenorprecoProduto::query()
+            ->when($busca, function ($query) use ($busca) {
+                $query->where(function ($q) use ($busca) {
+                    $q->where('descricao', 'like', "%{$busca}%")
+                      ->orWhere('palavrachave', 'like', "%{$busca}%")
+                      ->orWhere('gtin', 'like', "%{$busca}%");
+                });
+            })
+            ->orderBy('descricao')
+            ->get();
+
+        $dados = $produtos->map(function (MenorprecoProduto $produto) {
+            $ultimaData = MenorprecoHistoricoPreco::where('produto_id', $produto->id)
+                ->max('data_coleta');
+
+            $menorPreco = null;
+            $totalOfertas = 0;
+
+            if ($ultimaData) {
+                $menorPreco = MenorprecoHistoricoPreco::with('estabelecimento')
+                    ->where('produto_id', $produto->id)
+                    ->where('data_coleta', $ultimaData)
+                    ->orderBy('preco')
+                    ->first();
+
+                $totalOfertas = MenorprecoHistoricoPreco::where('produto_id', $produto->id)
+                    ->where('data_coleta', $ultimaData)
+                    ->count();
+            }
+
+            return [
+                'produto'       => $produto,
+                'ultima_coleta' => $ultimaData,
+                'menor_preco'   => $menorPreco,
+                'total_ofertas' => $totalOfertas,
+            ];
+        });
+
+        return response()->json([
+            'status' => 'ok',
+            'total'  => $dados->count(),
+            'data'   => $dados,
+        ]);
+    }
+
+    /**
      *  Lista histórico de preços de um produto
      */
     public function historico(int $produtoId)
@@ -82,20 +135,58 @@ class MenorPrecoController extends Controller
     }
 
     /**
-     * Consulta API Menor Preço
+     * Lista as categorias relevantes para um termo (passo 1 da busca).
+     */
+    public function categorias(MenorPrecoService $service, Request $request): JsonResponse
+    {
+        $termo = $request->query('termo', '');
+        $gtin  = $request->query('gtin', '');
+        $local = $request->query('local', config('menorpreco.local_cascavel'));
+        $raio  = (int) $request->query('raio', 50);
+
+        if (empty($termo) && empty($gtin)) {
+            return response()->json([
+                'status' => 'erro',
+                'msg'    => 'Informe termo ou gtin para busca',
+            ], 400);
+        }
+
+        $response = $service->categorias(
+            termo: $termo,
+            gtin: $gtin,
+            local: $local,
+            raio: $raio
+        );
+
+        return response()->json([
+            'status'     => 'ok',
+            'termo'      => $response['termo'] ?? $termo,
+            'local'      => $response['local'] ?? $local,
+            'categorias' => $response['categorias'] ?? [],
+        ]);
+    }
+
+    /**
+     * Consulta API Menor Preço (passo 2 da busca: produtos de uma categoria).
      */
     public function consultar(MenorPrecoService $service, Request $request): JsonResponse
     {
         $termo     = $request->query('termo', '');
         $gtin      = $request->query('gtin', '');
         $local     = $request->query('local', config('menorpreco.local_cascavel'));
-        $categoria = $request->query('categoria', '');
+        $categoria = (int) $request->query('categoria', 0);
+        $raio      = (int) $request->query('raio', 50);
+        $offset    = (int) $request->query('offset', 0);
+        $ordem     = (int) $request->query('ordem', 0);
 
         $response = $service->consultar(
             termo: $termo,
             gtin: $gtin,
             local: $local,
-            categoria: $categoria
+            categoria: $categoria,
+            offset: $offset,
+            raio: $raio,
+            ordem: $ordem
         );
 
         return response()->json([
@@ -115,11 +206,11 @@ class MenorPrecoController extends Controller
         $termo     = $request->query('termo');
         $gtin      = $request->query('gtin');
         $local     = $request->query('local');
-        $categoria = $request->query('categoria', 20);
-        $offset    = $request->query('offset', 0);
-        $raio      = $request->query('raio', 200);
-        $data      = $request->query('data', -1);
-        $ordem     = $request->query('ordem', 0);
+        $categoria = (int) $request->query('categoria', 20);
+        $offset    = (int) $request->query('offset', 0);
+        $raio      = (int) $request->query('raio', 200);
+        $data      = (int) $request->query('data', -1);
+        $ordem     = (int) $request->query('ordem', 0);
 
         // Validação
         if (empty($termo) && empty($gtin)) {

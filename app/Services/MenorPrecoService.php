@@ -5,9 +5,31 @@ namespace App\Services;
 use App\Helpers\NormalizacaoHelper;
 use App\Models\MenorprecoProduto as Produto;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\PendingRequest;
 
 class MenorPrecoService
 {
+    private const BASE_URL = 'https://menorpreco.notaparana.pr.gov.br/api/v1';
+
+    /**
+     * Cliente HTTP configurado para a API do Nota Paraná.
+     *
+     * Força IPv4 (evita travas de ~10s no connect via IPv6 no macOS),
+     * define timeouts sãos e tenta novamente em falhas transitórias.
+     */
+    private function client(): PendingRequest
+    {
+        return Http::connectTimeout(5)
+            ->timeout(30)
+            ->retry(
+                times: 4,
+                sleepMilliseconds: 400,
+                when: fn ($e) => $e instanceof \Illuminate\Http\Client\ConnectionException,
+                throw: false
+            )
+            ->withOptions(['force_ip_resolve' => 'v4']);
+    }
+
     /**
      * Consulta API Menor Preço
      * 
@@ -48,8 +70,8 @@ class MenorPrecoService
                 $params['termo'] = $termo;
             }
 
-            return Http::get(
-                'https://menorpreco.notaparana.pr.gov.br/api/v1/produtos',
+            return $this->client()->get(
+                self::BASE_URL . '/produtos',
                 $params
             )->json();
 
@@ -57,6 +79,46 @@ class MenorPrecoService
             return [
                 'status'   => 'erro',
                 'mensagem' => 'Não foi possível conectar à API Menor Preço.',
+                'erro'     => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Lista as categorias relevantes para um termo de busca.
+     *
+     * A API do Nota Paraná devolve, para um termo, as categorias onde ele
+     * aparece, com a quantidade de produtos (qtd) — usado como relevância.
+     *
+     * @return array{ local?: string, termo?: string, categorias?: array }
+     */
+    public function categorias(
+        ?string $termo = null,
+        ?string $gtin = null,
+        string $local = '',
+        int $raio = 200
+    ): array {
+        try {
+            $params = [
+                'local' => $local,
+                'raio'  => $raio,
+            ];
+
+            if (!empty($gtin)) {
+                $params['gtin'] = $gtin;
+            } elseif (!empty($termo)) {
+                $params['termo'] = $termo;
+            }
+
+            return $this->client()->get(
+                self::BASE_URL . '/categorias',
+                $params
+            )->json() ?? [];
+
+        } catch (\Throwable $e) {
+            return [
+                'status'   => 'erro',
+                'mensagem' => 'Não foi possível consultar as categorias.',
                 'erro'     => $e->getMessage(),
             ];
         }
