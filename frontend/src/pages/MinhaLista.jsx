@@ -45,7 +45,7 @@ export default function MinhaLista() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Minha Lista</h1>
         <p className="text-slate-500 text-sm">
-          Gerencie os produtos e os mercados que entram na sua{' '}
+          Gerencie os produtos e os estabelecimentos que entram na sua{' '}
           <Link to="/comparacao" className="text-brand-600 font-medium hover:underline">
             comparação
           </Link>
@@ -89,11 +89,19 @@ export default function MinhaLista() {
 
       {/* Mercados */}
       <section>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
-          🏪 Mercados ({mercados.length})
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+            🏪 Estabelecimentos ({mercados.length})
+          </h2>
+          <Link
+            to="/mercados"
+            className="text-xs font-medium text-brand-700 border border-brand-200 hover:bg-brand-50 rounded-lg px-3 py-1.5"
+          >
+            🔎 Explorar estabelecimentos da base
+          </Link>
+        </div>
         {mercados.length === 0 ? (
-          <Vazio texto="Nenhum mercado. Adicione pela Busca com o botão + mercado." />
+          <Vazio texto="Nenhum estabelecimento. Adicione pela Busca ou em Estabelecimentos." />
         ) : (
           <div className="space-y-2">
             {mercados.map((item) => (
@@ -133,7 +141,7 @@ function MercadoItem({ item, onRemover, onRenomeado }) {
               autoFocus
               value={apelido}
               onChange={(e) => setApelido(e.target.value)}
-              placeholder="Ex.: Mercado 1"
+              placeholder="Apelido (ex.: perto de casa)"
               className="rounded-lg border border-slate-300 px-2 py-1 text-sm outline-none focus:border-brand-500"
             />
             <button onClick={salvar} className="text-sm text-brand-700 font-medium">

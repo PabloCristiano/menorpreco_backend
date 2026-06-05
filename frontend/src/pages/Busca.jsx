@@ -56,7 +56,7 @@ export default function Busca() {
       })
       setMercadosNaLista((s) => new Set(s).add(est.codigo))
     } catch {
-      setErro('Não foi possível adicionar o mercado à lista.')
+      setErro('Não foi possível adicionar o estabelecimento à lista.')
     }
   }
 
@@ -382,8 +382,8 @@ function ProdutoCard({
             ativo={mercadoNaLista}
             desabilitado={!est.codigo}
             onClick={() => onAddMercado(est)}
-            labelInativo="+ mercado"
-            labelAtivo="✓ mercado"
+            labelInativo="+ estabelecimento"
+            labelAtivo="✓ estabelecimento"
           />
         </div>
       </div>

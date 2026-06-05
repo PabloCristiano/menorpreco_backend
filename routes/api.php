@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\MenorPrecoController;
 use App\Http\Controllers\Api\MinhaListaController;
 use App\Http\Controllers\Api\ColetaController;
 use App\Http\Controllers\Api\AnaliseController;
+use App\Http\Controllers\Api\EstabelecimentoController;
 
 // Rotas públicas (sem autenticação)
 Route::post('/register', [AuthController::class, 'register']);
@@ -50,4 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     # Análise (tendências, variações, rankings)
     Route::get('/analise/resumo',         [AnaliseController::class, 'resumo']);
     Route::get('/analise/produto/{id}',   [AnaliseController::class, 'produto']);
+
+    # Catálogo de estabelecimentos da base
+    Route::get('/estabelecimentos', [EstabelecimentoController::class, 'index']);
 });

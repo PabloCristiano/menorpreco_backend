@@ -35,6 +35,9 @@ export default function Layout() {
               <NavLink to="/minha-lista" className={navItem}>
                 Minha Lista
               </NavLink>
+              <NavLink to="/mercados" className={navItem}>
+                Estabelecimentos
+              </NavLink>
               <NavLink to="/analise" className={navItem}>
                 Análise
               </NavLink>

@@ -7,6 +7,7 @@ import Comparacao from './pages/Comparacao'
 import MinhaLista from './pages/MinhaLista'
 import Coleta from './pages/Coleta'
 import Analise from './pages/Analise'
+import Mercados from './pages/Mercados'
 import Monitorados from './pages/Monitorados'
 import ProdutoDetalhe from './pages/ProdutoDetalhe'
 
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/" element={<Busca />} />
         <Route path="/comparacao" element={<Comparacao />} />
         <Route path="/minha-lista" element={<MinhaLista />} />
+        <Route path="/mercados" element={<Mercados />} />
         <Route path="/coleta" element={<Coleta />} />
         <Route path="/analise" element={<Analise />} />
         <Route path="/monitorados" element={<Monitorados />} />

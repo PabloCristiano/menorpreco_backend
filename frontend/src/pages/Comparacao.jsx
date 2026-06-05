@@ -52,7 +52,7 @@ export default function Comparacao() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Comparação</h1>
           <p className="text-slate-500 text-sm">
-            Seus produtos × seus mercados. O menor preço de cada linha fica destacado.
+            Seus produtos × seus estabelecimentos. O menor preço de cada linha fica destacado.
           </p>
         </div>
         <button
@@ -160,7 +160,7 @@ function EstadoVazio({ temProdutos, temMercados }) {
         )}
         {!temMercados && (
           <>
-            Você ainda não tem <strong>mercados</strong> na lista.{' '}
+            Você ainda não tem <strong>estabelecimentos</strong> na lista.{' '}
           </>
         )}
       </p>
@@ -170,7 +170,7 @@ function EstadoVazio({ temProdutos, temMercados }) {
           Busca
         </Link>{' '}
         e use os botões <strong>+ lista</strong> (no produto) e{' '}
-        <strong>+ mercado</strong> (na loja). Gerencie em{' '}
+        <strong>+ estabelecimento</strong>. Gerencie em{' '}
         <Link to="/minha-lista" className="text-brand-600 font-medium hover:underline">
           Minha Lista
         </Link>
