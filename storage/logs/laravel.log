@@ -1,0 +1,120 @@
+[2026-01-23 23:47:40] local.INFO: Menor Preço Sync Finalizado {"total_gtins":249,"total_chamadas_api":249,"total_processados":1836,"total_erros":0,"tempo_total_seg":334.2,"tempo_formatado":"5min 34s"} 
+[2026-01-24 16:49:04] local.INFO: Menor Preço Sync Finalizado {"total_gtins":251,"total_chamadas_api":251,"total_processados":1880,"total_erros":0,"tempo_total_seg":381.6,"tempo_formatado":"6min 21s"} 
+[2026-01-24 21:45:23] local.INFO: Menor Preço Sync Finalizado {"total_gtins":276,"total_chamadas_api":276,"total_processados":2166,"total_erros":0,"tempo_total_seg":574.61,"tempo_formatado":"9min 34s"} 
+[2026-01-24 22:19:42] local.INFO: Menor Preço Sync Finalizado {"total_grupos":364,"grupos_com_gtin":314,"grupos_sem_gtin":50,"total_chamadas_api":364,"total_processados":2174,"total_erros":0,"tempo_total_seg":679.8,"tempo_formatado":"11min 19s"} 
+[2026-01-25 14:36:03] local.INFO: Menor Preço Sync Finalizado {"total_grupos":393,"grupos_com_gtin":325,"grupos_sem_gtin":68,"total_chamadas_api":393,"total_processados":2201,"total_erros":0,"tempo_total_seg":572.24,"tempo_formatado":"9min 32s"} 
+[2026-01-25 14:53:42] local.ERROR: App\Services\MenorPrecoService::consultar(): Argument #1 ($termo) must be of type string, null given, called in D:\Projetos\menorpreco_backend\app\Http\Controllers\Api\MenorPrecoController.php on line 112 {"exception":"[object] (TypeError(code: 0): App\\Services\\MenorPrecoService::consultar(): Argument #1 ($termo) must be of type string, null given, called in D:\\Projetos\\menorpreco_backend\\app\\Http\\Controllers\\Api\\MenorPrecoController.php on line 112 at D:\\Projetos\\menorpreco_backend\\app\\Services\\MenorPrecoService.php:14)
+[stacktrace]
+#0 D:\\Projetos\\menorpreco_backend\\app\\Http\\Controllers\\Api\\MenorPrecoController.php(112): App\\Services\\MenorPrecoService->consultar(NULL, '6g9fp8frx', '7')
+#1 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(46): App\\Http\\Controllers\\Api\\MenorPrecoController->consultarESalvar(Object(App\\Services\\MenorPrecoService), Object(Illuminate\\Http\\Request))
+#2 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(265): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Api\\MenorPrecoController), 'consultarESalva...')
+#3 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(211): Illuminate\\Routing\\Route->runController()
+#4 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(822): Illuminate\\Routing\\Route->run()
+#5 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(180): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#6 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php(50): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#7 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#8 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(137): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#9 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(821): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#10 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(800): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#11 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(764): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#12 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(753): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#13 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(200): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#14 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(180): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#15 D:\\Projetos\\menorpreco_backend\\vendor\\barryvdh\\laravel-debugbar\\src\\Middleware\\InjectDebugbar.php(66): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#16 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Barryvdh\\Debugbar\\Middleware\\InjectDebugbar->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#17 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#18 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#19 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#20 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#21 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#22 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#23 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php(109): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#26 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#27 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php(61): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#28 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#29 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#30 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#31 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#32 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#33 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePathEncoding.php(26): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#34 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(219): Illuminate\\Http\\Middleware\\ValidatePathEncoding->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#35 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(137): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(175): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#37 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#38 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#39 D:\\Projetos\\menorpreco_backend\\public\\index.php(20): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#40 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('D:\\\\Projetos\\\\men...')
+#41 {main}
+"} 
+[2026-01-25 18:47:58] local.INFO: Menor Preço Sync Finalizado {"total_grupos":396,"grupos_com_gtin":328,"grupos_sem_gtin":68,"total_chamadas_api":396,"total_processados":2236,"total_erros":0,"tempo_total_seg":531.19,"tempo_formatado":"8min 51s"} 
+[2026-01-26 22:48:10] local.INFO: Menor Preço Sync Finalizado {"total_grupos":396,"grupos_com_gtin":328,"grupos_sem_gtin":68,"total_chamadas_api":396,"total_processados":2174,"total_erros":0,"tempo_total_seg":578.37,"tempo_formatado":"9min 38s"} 
+[2026-01-30 18:19:38] local.INFO: Menor Preço Sync Finalizado {"total_grupos":396,"grupos_com_gtin":328,"grupos_sem_gtin":68,"total_chamadas_api":396,"total_processados":2228,"total_erros":0,"tempo_total_seg":531.2,"tempo_formatado":"8min 51s"} 
+[2026-01-30 23:20:29] local.INFO: Menor Preço Sync Finalizado {"total_grupos":396,"grupos_com_gtin":328,"grupos_sem_gtin":68,"total_chamadas_api":396,"total_processados":2242,"total_erros":0,"tempo_total_seg":571.79,"tempo_formatado":"9min 31s"} 
+[2026-02-01 12:29:31] local.INFO: Menor Preço Sync Finalizado {"total_grupos":396,"grupos_com_gtin":328,"grupos_sem_gtin":68,"total_chamadas_api":396,"total_processados":2253,"total_erros":0,"tempo_total_seg":533.63,"tempo_formatado":"8min 53s"} 
+[2026-02-02 21:34:45] local.INFO: Menor Preço Sync Finalizado {"total_grupos":412,"grupos_com_gtin":343,"grupos_sem_gtin":69,"total_chamadas_api":412,"total_processados":2497,"total_erros":0,"tempo_total_seg":661.4,"tempo_formatado":"11min 1s"} 
+[2026-02-07 11:17:17] local.INFO: Menor Preço Sync Finalizado {"total_grupos":412,"grupos_com_gtin":343,"grupos_sem_gtin":69,"total_chamadas_api":412,"total_processados":2462,"total_erros":0,"tempo_total_seg":545.21,"tempo_formatado":"9min 5s"} 
+[2026-02-07 11:31:09] local.ERROR: No arguments expected for "migrate" command, got "port=9000". {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): No arguments expected for \"migrate\" command, got \"port=9000\". at D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php:199)
+[stacktrace]
+#0 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php(92): Symfony\\Component\\Console\\Input\\ArgvInput->parseArgument('port=9000')
+#1 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken('port=9000', false)
+#2 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#3 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Command\\Command.php(295): Symfony\\Component\\Console\\Input\\Input->bind(Object(Symfony\\Component\\Console\\Input\\InputDefinition))
+#4 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(180): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#5 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(1102): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#6 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Database\\Console\\Migrations\\MigrateCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#7 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#8 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#9 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#10 D:\\Projetos\\menorpreco_backend\\artisan(16): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#11 {main}
+"} 
+[2026-02-07 11:31:23] local.ERROR: No arguments expected for "serve" command, got "port=9000". {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): No arguments expected for \"serve\" command, got \"port=9000\". at D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php:199)
+[stacktrace]
+#0 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php(92): Symfony\\Component\\Console\\Input\\ArgvInput->parseArgument('port=9000')
+#1 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken('port=9000', false)
+#2 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#3 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Command\\Command.php(295): Symfony\\Component\\Console\\Input\\Input->bind(Object(Symfony\\Component\\Console\\Input\\InputDefinition))
+#4 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(180): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#5 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(1102): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#6 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Foundation\\Console\\ServeCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#7 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#8 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#9 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#10 D:\\Projetos\\menorpreco_backend\\artisan(16): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#11 {main}
+"} 
+[2026-02-07 11:31:30] local.ERROR: No arguments expected for "serve" command, got "port". {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): No arguments expected for \"serve\" command, got \"port\". at D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php:199)
+[stacktrace]
+#0 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php(92): Symfony\\Component\\Console\\Input\\ArgvInput->parseArgument('port')
+#1 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken('port', false)
+#2 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Input\\Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#3 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Command\\Command.php(295): Symfony\\Component\\Console\\Input\\Input->bind(Object(Symfony\\Component\\Console\\Input\\InputDefinition))
+#4 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(180): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#5 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(1102): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#6 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(356): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Foundation\\Console\\ServeCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#7 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#8 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#9 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#10 D:\\Projetos\\menorpreco_backend\\artisan(16): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#11 {main}
+"} 
+[2026-02-07 11:31:37] local.ERROR: Command "server" is not defined.
+
+Did you mean one of these?
+    make:observer
+    serve {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"server\" is not defined.
+
+Did you mean one of these?
+    make:observer
+    serve at D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php:759)
+[stacktrace]
+#0 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(298): Symfony\\Component\\Console\\Application->find('server')
+#1 D:\\Projetos\\menorpreco_backend\\vendor\\symfony\\console\\Application.php(195): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#2 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#3 D:\\Projetos\\menorpreco_backend\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#4 D:\\Projetos\\menorpreco_backend\\artisan(16): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#5 {main}
+"} 
+[2026-02-07 11:45:24] local.INFO: Menor Preço Sync Finalizado {"total_grupos":422,"grupos_com_gtin":347,"grupos_sem_gtin":75,"total_chamadas_api":422,"total_processados":2515,"total_erros":0,"tempo_total_seg":637.4,"tempo_formatado":"10min 37s"} 
